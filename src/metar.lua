@@ -16,7 +16,7 @@ local socket_http  = require('socket.http')
 
 local weatherlib   = require('weatherlib')
 
-local os           = { date = os.date, time = os.time }
+local os           = { date = os.date, time = os.time, difftime = os.difftime }
 local pairs        = pairs
 local print        = print
 local setmetatable = setmetatable
@@ -266,6 +266,13 @@ for i, key in pairs(token_data.weather_phenomena.types) do
 	WEATHER_PHENOMENA[key.key] = i
 end
 
+-- Compute the difference in seconds between local time and UTC.
+-- http://lua-users.org/wiki/TimeZone
+local function get_timezone_offset()
+  local now = os.time()
+  return os.difftime(now, os.time(os.date("!*t", now)))
+end
+
 local function parse_metar_date(day, hour, min)
 	if not day or not hour or not min then
 		return
@@ -286,7 +293,7 @@ local function parse_metar_date(day, hour, min)
 	now.hour = hour
 	now.min  = min
 	now.sec  = 0
-	return { timestamp = os.time(now) }
+	return { timestamp = os.time(now) + get_timezone_offset() }
 end
 
 -- The parse_* routines parse snippets of METAR data
